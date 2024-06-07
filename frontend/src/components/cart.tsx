@@ -4,6 +4,7 @@ import ItemsModal from './itemsModal';
 import DiscountsModal from './discountsModal';
 import EditItemsModal from './editItemsModal';
 import CartItem from './cartItem';
+import styles from '../css_modules/cart.module.css';
 
 const exchangeRates: { [key: string]: number } = {
   'KRW': 1,
@@ -81,9 +82,18 @@ const Cart: React.FC = () => {
   };
 
   const handleDeleteItem = (key: string) => {
+    const newCartDiscounts = { ...cartDiscounts };
+    Object.keys(newCartDiscounts).forEach(discountKey => {
+      newCartDiscounts[discountKey] = newCartDiscounts[discountKey].filter(itemKey => itemKey !== key);
+      if (newCartDiscounts[discountKey].length === 0) {
+        delete newCartDiscounts[discountKey];
+      }
+    });
+
     const newCartItems = { ...cartItems };
     delete newCartItems[key];
 
+    setCartDiscounts(newCartDiscounts);
     setCartItems(newCartItems);
   };
 
@@ -128,62 +138,98 @@ const Cart: React.FC = () => {
 
 
   return (
-    <div>
-      <h1>장바구니</h1>
-      <button onClick={() => setItemsModalOpen(true)}>추가</button>
-      <button onClick={() => setDiscountsModalOpen(true)}>할인</button>
+    <div className={styles.container}>
+      <div className={styles.header}>
+        <h1>장바구니</h1> 
+      </div>
+      <div className={styles.buttons}>
+        <button
+          className={`${styles.button} ${isItemsModalOpen ? styles.active : ''}`}
+          onClick={() => setItemsModalOpen(true)}
+        >
+          시술
+        </button>
+        <button
+          className={`${styles.button} ${isDiscountsModalOpen ? styles.active : ''}`}
+          onClick={() => setDiscountsModalOpen(true)}
+        >
+          할인
+        </button>
+      </div>
 
-      <ItemsModal
-        isOpen={isItemsModalOpen}
-        onClose={() => setItemsModalOpen(false)}
-        items={items}
-        onAddItems={handleAddItems}
-        />
+      <div className={styles.content}>
+        {Object.keys(cartItems).length === 0 && Object.keys(cartDiscounts).length === 0 ? (
+          <p>장바구니가 비어 있습니다</p>
+          ) : (
+            <div>
+            {Object.entries(cartItems).map(([key, item]) => (
+              <CartItem
+              key={key}
+              item={item}
+              onChangeCount={(count) => handleChangeCount(key, count)}
+              onDelete={() => handleDeleteItem(key)}
+              />
+              ))}
 
-      <DiscountsModal
-        isOpen={isDiscountsModalOpen}
-        onClose={() => setDiscountsModalOpen(false)}
-        discounts={discounts}
-        onAddDiscounts={handleAddDiscounts}
-        />
-      
-      {editDiscountKey && (
-        <EditItemsModal
-          isOpen={isEditItemsModalOpen}
-          onClose={() => setEditItemsModalOpen(false)}
-          cartItems={cartItems}
-          appliedDiscounts={cartDiscounts}
-          discountKey={editDiscountKey}
-          onEditDiscounts={handleEditDiscounts}
-        />
-      )}
+            {Object.entries(cartDiscounts).map(([discountKey, itemKeys]) => (
+              <div key={discountKey} className={styles.item}>
+                <span>{discounts[discountKey].name} - {discounts[discountKey].rate * 100}%</span>
+                <span> (적용된 아이템: {itemKeys.map((itemKey: string) => cartItems[itemKey]?.name || '삭제된 아이템').join(', ')})</span>
+                <button onClick={() => handleDeleteDiscount(discountKey)}>삭제</button>
+                <button onClick={() => { setEditDiscountKey(discountKey); setEditItemsModalOpen(true); }}>수정</button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
 
-      {Object.keys(cartItems).length === 0 && Object.keys(cartDiscounts).length === 0 ? (
-        <p>장바구니가 비어 있습니다</p>
-      ) : (
-        <div>
-          {Object.entries(cartItems).map(([key, item]) => (
-            <CartItem
-            key={key}
-            item={item}
-            onChangeCount={(count) => handleChangeCount(key, count)}
-            onDelete={() => handleDeleteItem(key)}
+      <div className={styles.footer}>
+        <div className={styles.total}>
+          <span>총 가격: {getCurrencySymbol(currencyCode)}{calculateTotalPrice()}</span>
+        </div>
+        <button className={styles.nextButton}>다음</button>
+      </div>
+
+      {isItemsModalOpen && (
+        <div className={styles.modalOverlay} onClick={() => setItemsModalOpen(false)}>
+          <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+            <ItemsModal
+              isOpen={isItemsModalOpen}
+              onClose={() => setItemsModalOpen(false)}
+              items={items}
+              onAddItems={handleAddItems}
             />
-          ))}
-
-          {Object.entries(cartDiscounts).map(([discountKey, itemKeys]) => (
-            <div key={discountKey}>
-              <span>{discounts[discountKey].name} - {discounts[discountKey].rate * 100}%</span>
-              <span> (적용된 아이템: {itemKeys.map(key => cartItems[key].name).join(', ')})</span>              
-              <button onClick={() => handleDeleteDiscount(discountKey)}>삭제</button>
-              <button onClick={() => { setEditDiscountKey(discountKey); setEditItemsModalOpen(true); }}>수정</button>
-            </div>
-          ))}
+          </div>
         </div>
       )}
-      
-      <span>총 가격: {getCurrencySymbol(currencyCode)}{calculateTotalPrice().toFixed(2)}</span>
-      <button>다음</button>
+
+      {isDiscountsModalOpen && (
+        <div className={styles.modalOverlay} onClick={() => setDiscountsModalOpen(false)}>
+          <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+            <DiscountsModal
+              isOpen={isDiscountsModalOpen}
+              onClose={() => setDiscountsModalOpen(false)}
+              discounts={discounts}
+              onAddDiscounts={handleAddDiscounts}
+            />
+          </div>
+        </div>
+      )}
+
+      {isEditItemsModalOpen && (
+        <div className={styles.modalOverlay} onClick={() => setEditItemsModalOpen(false)}>
+          <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+            <EditItemsModal
+              isOpen={isEditItemsModalOpen}
+              onClose={() => setEditItemsModalOpen(false)}
+              cartItems={cartItems}
+              appliedDiscounts={cartDiscounts}
+              discountKey={editDiscountKey!}
+              onEditDiscounts={handleEditDiscounts}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
