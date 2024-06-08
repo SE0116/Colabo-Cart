@@ -29,7 +29,7 @@ const EditItemsModal: React.FC<EditItemsModalProps> = ({ isOpen, onClose, cartIt
 
   if (!isOpen) return null;
 
-  
+
   return (
     <div className="modal">
       <div className={styles.modalHeader}>
@@ -39,17 +39,20 @@ const EditItemsModal: React.FC<EditItemsModalProps> = ({ isOpen, onClose, cartIt
 
       <hr />
 
-      {Object.entries(cartItems).map(([key, item]) => (
-        <div key={key}>
-          <input
-            type="checkbox"
-            id={key}
-            checked={selectedItems.includes(key)}
-            onChange={() => handleSelectItem(key)}
-          />
-          <label htmlFor={key}>{item.name}</label>
-        </div>
-      ))}
+      <div className={styles.itemList}>
+        {Object.entries(cartItems).map(([key, item]) => (
+          <div className={styles.flexCheckbox} key={key}>
+            <label htmlFor={key}><p className={styles.itemName}>{item.name}</p></label>
+            <input
+              type="checkbox"
+              id={key}
+              checked={selectedItems.includes(key)}
+              onChange={() => handleSelectItem(key)}
+            />
+          </div>
+        ))}
+      </div>
+
       <button className={styles.applyButton} onClick={handleSaveChanges}>저장</button>
     </div>
   );
