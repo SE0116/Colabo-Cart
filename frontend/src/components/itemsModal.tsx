@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import styles from '../css_modules/modal.module.css';
+
 
 interface ItemsModalProps {
   isOpen: boolean;
@@ -26,20 +28,33 @@ const ItemsModal: React.FC<ItemsModalProps> = ({ isOpen, onClose, items, discoun
 
   if (!isOpen) return null;
 
+  
   return (
     <div className="modal">
-      <h2>{items ? '아이템 목록' : '할인 목록'}</h2>
-      {items && Object.entries(items).map(([key, item]) => (
-        <div key={key}>
-          <input
-            type="checkbox"
-            id={key}
-            checked={selectedItems.includes(key)}
-            onChange={() => handleSelectItem(key)}
-          />
-          <label htmlFor={key}>{item.name} - {item.price}</label>
-        </div>
-      ))}
+      <div className={styles.modalHeader}>
+        <h2>아이템 목록</h2>
+        <button className={styles.closeButton} onClick={onClose}>X</button>
+      </div>
+
+      <hr />
+
+      <div className={styles.itemList}>
+        {items && Object.entries(items).map(([key, item]) => (
+          <div className={styles.flexCheckbox} key={key}>
+            <label htmlFor={key}>
+              <p className={styles.itemName}>{item.name}</p>
+              <p className={styles.itemPrice}>{item.price}</p>
+            </label>
+            <input
+              type="checkbox"
+              id={key}
+              checked={selectedItems.includes(key)}
+              onChange={() => handleSelectItem(key)}
+            />
+          </div>
+        ))}
+      </div>
+
       {discounts && Object.entries(discounts).map(([key, discount]) => (
         <div key={key}>
           <input
@@ -51,8 +66,8 @@ const ItemsModal: React.FC<ItemsModalProps> = ({ isOpen, onClose, items, discoun
           <label htmlFor={key}>{discount.name} - {discount.rate * 100}%</label>
         </div>
       ))}
-      <button onClick={handleAddItems}>확인</button>
-      <button onClick={onClose}>닫기</button>
+
+      <button className={styles.applyButton} onClick={handleAddItems}>확인</button>
     </div>
   );
 }

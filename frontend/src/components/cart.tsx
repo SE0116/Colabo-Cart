@@ -4,7 +4,9 @@ import ItemsModal from './itemsModal';
 import DiscountsModal from './discountsModal';
 import EditItemsModal from './editItemsModal';
 import CartItem from './cartItem';
+import DiscountItem from './discountItem';
 import styles from '../css_modules/cart.module.css';
+
 
 const exchangeRates: { [key: string]: number } = {
   'KRW': 1,
@@ -26,7 +28,7 @@ const Cart: React.FC = () => {
 
   const [currencyCode, setCurrencyCode] = useState<string>('KRW');  // 최종 금액을 계산하기 전 가격은 원 단위이기 때문에 KRW로 초기화
 
-
+  // json 파일에서 데이터를 받아 시술, 할인, 국가 통화 코드에 대한 정보를 저장합니다.
   useEffect(() => {
     axios.get('/Salon.json')
       .then(response => {
@@ -37,6 +39,8 @@ const Cart: React.FC = () => {
       .catch(error => console.error('JSON 파일을 불러오는 데 실패했습니다. : ', error));
   }, []);
 
+  // 선택한 시술 아이템을 장바구니에 담습니다.
+  // 요구 사항에 따라 이미 등록된 아이템은 중복으로 장바구니에 담지 않습니다.
   const handleAddItems = (selectedItems: string[]) => {
     const newCartItems = { ...cartItems };
 
@@ -50,6 +54,8 @@ const Cart: React.FC = () => {
     setItemsModalOpen(false);
   };
 
+  // 선택한 할인 아이템을 장바구니에 담습니다.
+  // 시술 아이템과 동일하게 중복 아이템은 담지 않습니다.
   const handleAddDiscounts = (selectedDiscounts: string[]) => {
     const newCartDiscounts = { ...cartDiscounts };
 
@@ -63,6 +69,7 @@ const Cart: React.FC = () => {
     setDiscountsModalOpen(false);
   };
 
+  // 장바구니에 담긴 할인 아이템에 대해 할인을 적용할 시술 아이템을 설정합니다.
   const handleEditDiscounts = (discountKey: string, selectedItems: string[]) => {
     const newCartDiscounts = { ...cartDiscounts };
 
@@ -71,6 +78,7 @@ const Cart: React.FC = () => {
     setCartDiscounts(newCartDiscounts);
   };
 
+  // 시술 아이템의 수량을 변경합니다.
   const handleChangeCount = (key: string, count: number) => {
     const newCartItems = { ...cartItems };
 
@@ -81,10 +89,14 @@ const Cart: React.FC = () => {
     setCartItems(newCartItems);
   };
 
+  // 장바구니에 담은 시술 아이템을 삭제합니다.
+  // 오류 방지를 위해 삭제하려는 시술 아이템에 대해 적용되는 할인이 있으면 해당 할인을 해제시키고 시술 아이템을 삭제합니다.
   const handleDeleteItem = (key: string) => {
     const newCartDiscounts = { ...cartDiscounts };
+
     Object.keys(newCartDiscounts).forEach(discountKey => {
       newCartDiscounts[discountKey] = newCartDiscounts[discountKey].filter(itemKey => itemKey !== key);
+
       if (newCartDiscounts[discountKey].length === 0) {
         delete newCartDiscounts[discountKey];
       }
@@ -97,6 +109,7 @@ const Cart: React.FC = () => {
     setCartItems(newCartItems);
   };
 
+  // 장바구니에 담은 할인 아이템을 삭제합니다.
   const handleDeleteDiscount = (key: string) => {
     const newCartDiscounts = { ...cartDiscounts };
     delete newCartDiscounts[key];
@@ -104,6 +117,8 @@ const Cart: React.FC = () => {
     setCartDiscounts(newCartDiscounts);
   };
 
+  // 장바구니에 담긴 전체 아이템에 대해 가격을 계산합니다.
+  // 우선 원 단위로 계산 후 현재 currency code 에 맞는 환율을 곱해 최종 값을 계산합니다.
   const calculateTotalPrice = () => {
     const itemTotal = Object.values(cartItems).reduce((total, item) => {
       return total + item.price * item.count;
@@ -159,7 +174,10 @@ const Cart: React.FC = () => {
 
       <div className={styles.content}>
         {Object.keys(cartItems).length === 0 && Object.keys(cartDiscounts).length === 0 ? (
-          <p>장바구니가 비어 있습니다</p>
+          <div className={styles.emptyCart}>
+            <p>장바구니가 비어 있습니다</p>
+            <img className={styles.emptyCartImage} src={`${process.env.PUBLIC_URL}/emptyCart.png`} alt=''></img>
+          </div>
           ) : (
             <div>
             {Object.entries(cartItems).map(([key, item]) => (
@@ -169,23 +187,27 @@ const Cart: React.FC = () => {
               onChangeCount={(count) => handleChangeCount(key, count)}
               onDelete={() => handleDeleteItem(key)}
               />
-              ))}
+            ))}
 
             {Object.entries(cartDiscounts).map(([discountKey, itemKeys]) => (
-              <div key={discountKey} className={styles.item}>
-                <span>{discounts[discountKey].name} - {discounts[discountKey].rate * 100}%</span>
-                <span> (적용된 아이템: {itemKeys.map((itemKey: string) => cartItems[itemKey]?.name || '삭제된 아이템').join(', ')})</span>
-                <button onClick={() => handleDeleteDiscount(discountKey)}>삭제</button>
-                <button onClick={() => { setEditDiscountKey(discountKey); setEditItemsModalOpen(true); }}>수정</button>
-              </div>
+              <DiscountItem
+                  key={discountKey}
+                  discount={discounts[discountKey]}
+                  itemKeys={itemKeys}
+                  cartItems={cartItems}
+                  onDelete={() => handleDeleteDiscount(discountKey)}
+                  onEdit={() => { setEditDiscountKey(discountKey); setEditItemsModalOpen(true); }}
+              />
             ))}
           </div>
         )}
       </div>
 
+
       <div className={styles.footer}>
         <div className={styles.total}>
-          <span>총 가격: {getCurrencySymbol(currencyCode)}{calculateTotalPrice()}</span>
+          <p>합계</p>
+          <p>{getCurrencySymbol(currencyCode)} {calculateTotalPrice()}</p>
         </div>
         <button className={styles.nextButton}>다음</button>
       </div>

@@ -1,0 +1,24 @@
+.selectButton {
+  border: none;
+  border-radius: 10px;
+  background-color: #f1f1f1;
+  height: 4vh;
+}
+
+.deleteButton {
+  border: none;
+  background-color: white;
+}
+
+.itemName {
+  font-weight: bold;
+}
+
+.itemPrice {
+  color:  gray;
+}
+
+.itemQuantity {
+  display: flex;
+  justify-content: space-between;
+}

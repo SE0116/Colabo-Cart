@@ -1,0 +1,45 @@
+.modalHeader {
+  display: flex;
+  justify-content: space-between;
+}
+
+.closeButton {
+  border: none;
+  background-color: white;
+}
+
+.itemList {
+  max-height: 300px;
+  overflow-y: auto;
+  margin-bottom: 20px;
+}
+
+label {
+  flex-grow: 1;
+}
+
+.flexCheckbox {
+  display: flex;
+  justify-content: space-between;
+}
+
+.itemName, .discountName {
+  font-weight: bold;
+}
+
+.itemPrice, .discountRate {
+  color:  gray;
+}
+
+.applyButton {
+  background-color: #9b59b6;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  width: 100%;
+  text-align: center;
+  margin-top: 20px;
+  transition: background-color 0.3s ease;
+}

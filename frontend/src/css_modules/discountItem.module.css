@@ -1,0 +1,28 @@
+.editButton {
+  border: none;
+  border-radius: 10px;
+  background-color: #f1f1f1;
+  height: 4vh;
+}
+
+.discountName {
+  font-weight: bold;
+}
+
+.discountedItem {
+  width: 80%;
+}
+
+.deleteButton {
+  border: none;
+  background-color: white;
+}
+
+.discountRate {
+  color:  gray;
+}
+
+.itemEdit {
+  display: flex;
+  justify-content: space-between;
+}
